@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Information Display</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="lesson-container">
+            <div class="lesson-header">
+                <h1>{{ lesson.subject }}</h1>
+            </div>
+            <div class="lesson-content">
+                <img 
+                    :src="lesson.image.path" 
+                    :alt="lesson.image.alt" 
+                    class="lesson-image"
+                >
+                
+                <div class="lesson-info">
+                    <div class="info-item">
+                        <span class="info-label">Subject:</span>
+                        <span class="info-value">{{ lesson.subject }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Location:</span>
+                        <span class="info-value">{{ lesson.location }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Price:</span>
+                        <span class="info-value price">${{ lesson.price }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                lesson: {
+                    subject: "Advanced Mathematics",
+                    location: "Room 101, Science Building",
+                    price: 45.00,
+                    image: {
+                        path: "https://images.unsplash.com/photo-1509228627152-72ae4c2d6a88?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+                        alt: "Mathematics textbooks and calculator on a desk"
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
