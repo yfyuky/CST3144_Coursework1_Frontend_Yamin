@@ -9,41 +9,119 @@
 </head>
 <body>
     <div id="app">
-        <div class="lesson-container">
-            <div class="lesson-header">
-                <h1>{{ lesson.subject }}</h1>
-            </div>
-            <div class="lesson-content">
-                <img 
-                    :src="lesson.image.path" 
-                    :alt="lesson.image.alt" 
-                    class="lesson-image"
-                >
-                
-                <div class="lesson-info">
-                    <div class="info-item">
-                        <span class="info-label">Subject:</span>
-                        <span class="info-value">{{ lesson.subject }}</span>
-                    </div>
+        <header>
+            <h1 v-text="sitename"></h1>
+            <button v-on:click="toggleCheckout">
+                {{ cartItemCount }}
+                <span class="fas fa-shopping-cart"></span>
+                Checkout
+            </button>
+        </header>
+
+        <main>
+            <div v-if="showProduct" class="lesson-container">
+                <div class="lesson-header">
+                    <h1>{{ lesson.subject }}</h1>
+                </div>
+                <div class="lesson-content">
+                    <img 
+                        :src="lesson.image.path" 
+                        :alt="lesson.image.alt" 
+                        class="lesson-image"
+                    >
                     
-                    <div class="info-item">
-                        <span class="info-label">Location:</span>
-                        <span class="info-value">{{ lesson.location }}</span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <span class="info-label">Price:</span>
-                        <span class="info-value price">${{ lesson.price }}</span>
+                    <div class="lesson-info">
+                        <div class="info-item">
+                            <span class="info-label">Subject:</span>
+                            <span class="info-value">{{ lesson.subject }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Location:</span>
+                            <span class="info-value">{{ lesson.location }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-label">Price:</span>
+                            <span class="info-value price">${{ lesson.price }}</span>
+                        </div>
+
+                        <div style="margin-top: 12px;">
+                            <button v-on:click="addToCart" v-if="canEnroll">Enroll</button>
+                            <button disabled v-else>Enroll</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div v-else>
+                <h2>Enrollment Checkout</h2>
+                <p><strong>Cart Items:</strong> {{ cartItemCount }}</p>
+
+                <h3>Enter Your Information</h3>
+                <p>
+                    <label for="firstName">First Name:</label><br>
+                    <input id="firstName" v-model="order.firstName" placeholder="Enter first name">
+                </p>
+                <p>
+                    <label for="lastName">Last Name:</label><br>
+                    <input id="lastName" v-model="order.lastName" placeholder="Enter last name">
+                </p>
+
+                <p>
+                    <strong>Address:</strong>
+                    <input v-model="order.address" placeholder="Enter address">
+                </p>
+                <p>
+                    <strong>City:</strong>
+                    <input v-model="order.city" placeholder="Enter city">
+                </p>
+                <p>
+                    <strong>State:</strong>
+                    <select v-model="order.state">
+                        <option disabled value="">State</option>
+                        <option v-for="state in states" :key="state">{{state}}</option>
+                    </select>
+                </p>
+                <p>
+                    <strong>Zip/Postal Code:</strong>
+                    <input v-model.number="order.zip" placeholder="Enter zip/postal code">
+                </p>
+
+                <p>
+                    <input type="checkbox" id="gift" v-model="order.gift" :true-value="order.sendGift" :false-value="order.dontSendGift">
+                    <label for="gift">Send Welcome Pack?</label>
+                </p>
+                <p>
+                    <input type="radio" id="home" value="Home" v-model="order.method">
+                    <label for="home">Home</label>
+                    <input type="radio" id="business" value="Business" v-model="order.method">
+                    <label for="business">Business</label>
+                </p>
+
+                <div style="margin-top: 20px; border: 1px solid #ccc; padding: 10px;">
+                    <p><strong>First Name:</strong> {{ order.firstName }}</p>
+                    <p><strong>Last Name:</strong> {{ order.lastName }}</p>
+                    <p><strong>Address:</strong> {{ order.address }}</p>
+                    <p><strong>City:</strong> {{ order.city }}</p>
+                    <p><strong>State:</strong> {{ order.state }}</p>
+                    <p><strong>Zip/Postal Code:</strong> {{ order.zip }}</p>
+                    <p><strong>Send Welcome Pack?</strong> {{ order.gift }}</p>
+                    <p><strong>Contact Method:</strong> {{ order.method }}</p>
+                </div>
+
+                <button v-on:click="submitForm">Place Order</button>
+
+                <button v-on:click="showProduct = true">← Back to Lesson</button>
+            </div>
+        </main>
     </div>
 
     <script>
         new Vue({
             el: '#app',
             data: {
+                sitename: 'Vue.js Lesson Center',
                 lesson: {
                     subject: "Advanced Mathematics",
                     location: "Room 101, Science Building",
@@ -51,7 +129,40 @@
                     image: {
                         path: "https://images.unsplash.com/photo-1509228627152-72ae4c2d6a88?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
                         alt: "Mathematics textbooks and calculator on a desk"
-                    }
+                    },
+                    availableSeats: 10
+                },
+                cart: [],
+                showProduct: true,
+                order: {
+                    firstName: '',
+                    lastName: '',
+                    address: '',
+                    city: '',
+                    state: '',
+                    zip: '',
+                    method: 'Home',
+                    sendGift: 'Send welcome pack',
+                    dontSendGift: 'Do not send welcome pack',
+                    gift: 'Do not send welcome pack'
+                },
+                states: ['Alabama', 'Alaska', 'Arizona', 'California', 'Nevada']
+            },
+            methods: {
+                addToCart: function () {
+                    this.cart.push(this.lesson.subject);
+                },
+                toggleCheckout: function () {
+                    this.showProduct = !this.showProduct;
+                },
+                submitForm: function () { alert('Enrollment submitted!') }
+            },
+            computed: {
+                cartItemCount: function () {
+                    return this.cart.length;
+                },
+                canEnroll: function () {
+                    return this.lesson.availableSeats > this.cartItemCount;
                 }
             }
         });
