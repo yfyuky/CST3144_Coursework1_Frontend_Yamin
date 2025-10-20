@@ -8,49 +8,38 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div id="app">
         <header>
             <h1 v-text="sitename"></h1>
             <button v-on:click="toggleCheckout">
                 {{ cartItemCount }}
-                <span class="fas fa-shopping-cart"></span>
+                <i class="fa-solid fa-user-graduate"></i>
                 Checkout
             </button>
         </header>
 
         <main>
-            <div v-if="showProduct" class="lesson-container">
-                <div class="lesson-header">
-                    <h1>{{ lesson.subject }}</h1>
-                </div>
-                <div class="lesson-content">
-                    <img 
-                        :src="lesson.image.path" 
-                        :alt="lesson.image.alt" 
-                        class="lesson-image"
-                    >
-                    
-                    <div class="lesson-info">
-                        <div class="info-item">
-                            <span class="info-label">Subject:</span>
-                            <span class="info-value">{{ lesson.subject }}</span>
+            <div v-if="showProduct">
+                <div class="classes">
+                    <article class="class" v-for="cls in sortedClasses" :key="cls.id">
+                        <figure>
+                            <img :src="cls.image" :alt="cls.title">
+                        </figure>
+                        <h2>{{ cls.title }}</h2>
+                        <p v-html="cls.description"></p>
+                        <p>Fee: ${{ cls.price.toFixed(2) }}</p>
+                        <p>Location: {{ cls.location }}</p>
+                        <div class="rating">
+                            <i v-for="n in cls.rating" class="fa-solid fa-star"></i>
+                            <i v-for="n in 5 - cls.rating" class="fa-regular fa-star"></i>
                         </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Location:</span>
-                            <span class="info-value">{{ lesson.location }}</span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Price:</span>
-                            <span class="info-value price">${{ lesson.price }}</span>
-                        </div>
-
-                        <div style="margin-top: 12px;">
-                            <button v-on:click="addToCart" v-if="canEnroll">Enroll</button>
-                            <button disabled v-else>Enroll</button>
-                        </div>
-                    </div>
+                        <span v-if="cls.availableSeats === cartCount(cls.id)">All full!</span>
+                        <span v-else-if="cls.availableSeats - cartCount(cls.id) < 5">Only {{ cls.availableSeats - cartCount(cls.id) }} seats left!</span>
+                        <span v-else>Enroll now!</span>
+                        <button v-on:click="addToCart(cls)" v-if="canEnroll(cls)"> Enroll</button>
+                        <button disabled v-else>Enroll</button>
+                    </article>
                 </div>
             </div>
 
@@ -89,14 +78,14 @@
                 </p>
 
                 <p>
-                    <input type="checkbox" id="gift" v-model="order.gift" :true-value="order.sendGift" :false-value="order.dontSendGift">
-                    <label for="gift">Send Welcome Pack?</label>
+                    <input type="checkbox" id="welcome" v-model="order.welcomePack" :true-value="order.sendWelcome" :false-value="order.noWelcome">
+                    <label for="welcome">Send Welcome Pack?</label>
                 </p>
                 <p>
-                    <input type="radio" id="home" value="Home" v-model="order.method">
-                    <label for="home">Home</label>
-                    <input type="radio" id="business" value="Business" v-model="order.method">
-                    <label for="business">Business</label>
+                    <input type="radio" id="email" value="Email" v-model="order.contact">
+                    <label for="email">Email</label>
+                    <input type="radio" id="phone" value="Phone" v-model="order.contact">
+                    <label for="phone">Phone</label>
                 </p>
 
                 <div style="margin-top: 20px; border: 1px solid #ccc; padding: 10px;">
@@ -106,32 +95,26 @@
                     <p><strong>City:</strong> {{ order.city }}</p>
                     <p><strong>State:</strong> {{ order.state }}</p>
                     <p><strong>Zip/Postal Code:</strong> {{ order.zip }}</p>
-                    <p><strong>Send Welcome Pack?</strong> {{ order.gift }}</p>
-                    <p><strong>Contact Method:</strong> {{ order.method }}</p>
+                    <p><strong>Send Welcome Pack?</strong> {{ order.welcomePack }}</p>
+                    <p><strong>Contact Method:</strong> {{ order.contact }}</p>
                 </div>
 
-                <button v-on:click="submitForm">Place Order</button>
+                <button v-on:click="submitForm">Place Enrollment</button>
 
-                <button v-on:click="showProduct = true">← Back to Lesson</button>
+                <button v-on:click="showProduct = true">← Back to Classes</button>
             </div>
         </main>
     </div>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="classes.js"></script>
     <script>
         new Vue({
             el: '#app',
             data: {
-                sitename: 'Vue.js Lesson Center',
-                lesson: {
-                    subject: "Advanced Mathematics",
-                    location: "Room 101, Science Building",
-                    price: 45.00,
-                    image: {
-                        path: "https://images.unsplash.com/photo-1509228627152-72ae4c2d6a88?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-                        alt: "Mathematics textbooks and calculator on a desk"
-                    },
-                    availableSeats: 10
-                },
+                sitename: 'After-School Activity Center',
+                // multiple class offerings
+                classes: classesData,
                 cart: [],
                 showProduct: true,
                 order: {
@@ -141,28 +124,50 @@
                     city: '',
                     state: '',
                     zip: '',
-                    method: 'Home',
-                    sendGift: 'Send welcome pack',
-                    dontSendGift: 'Do not send welcome pack',
-                    gift: 'Do not send welcome pack'
+                    contact: 'Email',
+                    sendWelcome: 'Send welcome pack',
+                    noWelcome: 'Do not send welcome pack',
+                    welcomePack: 'Do not send welcome pack'
                 },
                 states: ['Alabama', 'Alaska', 'Arizona', 'California', 'Nevada']
             },
             methods: {
-                addToCart: function () {
-                    this.cart.push(this.lesson.subject);
+                addToCart: function (cls) {
+                    this.cart.push(cls.id);
                 },
                 toggleCheckout: function () {
                     this.showProduct = !this.showProduct;
                 },
-                submitForm: function () { alert('Enrollment submitted!') }
+                submitForm: function () { alert('Enrollment submitted!') },
+                // helper to count how many of a class are in the cart
+                cartCount: function (id) {
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+                itemsLeftFor: function (cls) {
+                    return Math.max(0, cls.availableSeats - this.cartCount(cls.id));
+                },
+                canEnroll: function (cls) {
+                    return cls.availableSeats > this.cartCount(cls.id);
+                }
             },
             computed: {
                 cartItemCount: function () {
                     return this.cart.length;
                 },
-                canEnroll: function () {
-                    return this.lesson.availableSeats > this.cartItemCount;
+                sortedClasses() {
+                    // sort by price ascending without mutating original
+                    function compare(a, b) {
+                        if (a.price > b.price) return 1;
+                        if (a.price < b.price) return -1;
+                        return 0;
+                    }
+                    return this.classes.slice().sort(compare);
                 }
             }
         });
