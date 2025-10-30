@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lesson Information Display</title>
+    <title>After-School Activity Center</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,15 +12,37 @@
     <div id="app">
         <header>
             <h1 v-text="sitename"></h1>
-            <button v-on:click="toggleCheckout">
+            <button v-on:click="toggleCheckout" :disabled="cartItemCount === 0">
                 {{ cartItemCount }}
-                <i class="fa-solid fa-user-graduate"></i>
+                <i class="fa-solid fa-cart-shopping"></i>
                 Checkout
             </button>
         </header>
 
         <main>
+            <!-- Lessons Page -->
             <div v-if="showProduct">
+                <!-- Sort Controls -->
+                <div class="sort-controls">
+                    <div class="sort-group">
+                        <label for="sortAttribute">Sort by:</label>
+                        <select id="sortAttribute" v-model="sortAttribute">
+                            <option value="title">Subject</option>
+                            <option value="location">Location</option>
+                            <option value="price">Price</option>
+                            <option value="availableSeats">Spaces</option>
+                        </select>
+                    </div>
+                    <div class="sort-group">
+                        <label for="sortOrder">Order:</label>
+                        <select id="sortOrder" v-model="sortOrder">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Lessons Grid -->
                 <div class="classes">
                     <article class="class" v-for="cls in sortedClasses" :key="cls.id">
                         <figure>
@@ -28,80 +50,77 @@
                         </figure>
                         <h2>{{ cls.title }}</h2>
                         <p v-html="cls.description"></p>
-                        <p>Fee: ${{ cls.price.toFixed(2) }}</p>
-                        <p>Location: {{ cls.location }}</p>
+                        <p><strong>Price:</strong> ${{ cls.price.toFixed(2) }}</p>
+                        <p><strong>Location:</strong> {{ cls.location }}</p>
+                        <p><strong>Spaces:</strong> {{ cls.availableSeats - cartCount(cls.id) }}</p>
                         <div class="rating">
-                            <i v-for="n in cls.rating" class="fa-solid fa-star"></i>
-                            <i v-for="n in 5 - cls.rating" class="fa-regular fa-star"></i>
+                            <i v-for="n in cls.rating" :key="'filled-'+n" class="fa-solid fa-star"></i>
+                            <i v-for="n in (5 - cls.rating)" :key="'empty-'+n" class="fa-regular fa-star"></i>
                         </div>
-                        <span v-if="cls.availableSeats === cartCount(cls.id)">All full!</span>
-                        <span v-else-if="cls.availableSeats - cartCount(cls.id) < 5">Only {{ cls.availableSeats - cartCount(cls.id) }} seats left!</span>
-                        <span v-else>Enroll now!</span>
-                        <button v-on:click="addToCart(cls)" v-if="canEnroll(cls)"> Enroll</button>
-                        <button disabled v-else>Enroll</button>
+                        <span v-if="cls.availableSeats === cartCount(cls.id)" class="availability full">All full!</span>
+                        <span v-else-if="cls.availableSeats - cartCount(cls.id) < 5" class="availability limited">Only {{ cls.availableSeats - cartCount(cls.id) }} seats left!</span>
+                        <span v-else class="availability available">Enroll now!</span>
+                        <button v-on:click="addToCart(cls)" v-if="canEnroll(cls)">Add to Cart</button>
+                        <button disabled v-else>Add to Cart</button>
                     </article>
                 </div>
             </div>
 
+            <!-- Checkout Page -->
             <div v-else>
                 <h2>Enrollment Checkout</h2>
-                <p><strong>Cart Items:</strong> {{ cartItemCount }}</p>
-
-                <h3>Enter Your Information</h3>
-                <p>
-                    <label for="firstName">First Name:</label><br>
-                    <input id="firstName" v-model="order.firstName" placeholder="Enter first name">
-                </p>
-                <p>
-                    <label for="lastName">Last Name:</label><br>
-                    <input id="lastName" v-model="order.lastName" placeholder="Enter last name">
-                </p>
-
-                <p>
-                    <strong>Address:</strong>
-                    <input v-model="order.address" placeholder="Enter address">
-                </p>
-                <p>
-                    <strong>City:</strong>
-                    <input v-model="order.city" placeholder="Enter city">
-                </p>
-                <p>
-                    <strong>State:</strong>
-                    <select v-model="order.state">
-                        <option disabled value="">State</option>
-                        <option v-for="state in states" :key="state">{{state}}</option>
-                    </select>
-                </p>
-                <p>
-                    <strong>Zip/Postal Code:</strong>
-                    <input v-model.number="order.zip" placeholder="Enter zip/postal code">
-                </p>
-
-                <p>
-                    <input type="checkbox" id="welcome" v-model="order.welcomePack" :true-value="order.sendWelcome" :false-value="order.noWelcome">
-                    <label for="welcome">Send Welcome Pack?</label>
-                </p>
-                <p>
-                    <input type="radio" id="email" value="Email" v-model="order.contact">
-                    <label for="email">Email</label>
-                    <input type="radio" id="phone" value="Phone" v-model="order.contact">
-                    <label for="phone">Phone</label>
-                </p>
-
-                <div style="margin-top: 20px; border: 1px solid #ccc; padding: 10px;">
-                    <p><strong>First Name:</strong> {{ order.firstName }}</p>
-                    <p><strong>Last Name:</strong> {{ order.lastName }}</p>
-                    <p><strong>Address:</strong> {{ order.address }}</p>
-                    <p><strong>City:</strong> {{ order.city }}</p>
-                    <p><strong>State:</strong> {{ order.state }}</p>
-                    <p><strong>Zip/Postal Code:</strong> {{ order.zip }}</p>
-                    <p><strong>Send Welcome Pack?</strong> {{ order.welcomePack }}</p>
-                    <p><strong>Contact Method:</strong> {{ order.contact }}</p>
+                
+                <!-- Shopping Cart Display -->
+                <div class="cart-section">
+                    <h3>Your Cart ({{ cartItemCount }} items)</h3>
+                    <div v-if="cartItems.length > 0" class="cart-items">
+                        <div v-for="(item, index) in cartItems" :key="'cart-'+index" class="cart-item">
+                            <div class="cart-item-info">
+                                <h4>{{ item.title }}</h4>
+                                <p><strong>Location:</strong> {{ item.location }}</p>
+                                <p><strong>Price:</strong> ${{ item.price.toFixed(2) }}</p>
+                            </div>
+                            <button v-on:click="removeFromCart(index)" class="remove-btn">Remove</button>
+                        </div>
+                    </div>
+                    <p v-else>Your cart is empty.</p>
+                    <p class="cart-total"><strong>Total: ${{ cartTotal.toFixed(2) }}</strong></p>
                 </div>
 
-                <button v-on:click="submitForm">Place Enrollment</button>
+                <!-- Checkout Form -->
+                <div class="checkout-form">
+                    <h3>Enter Your Information</h3>
+                    <p>
+                        <label for="name">Name (letters only):</label><br>
+                        <input 
+                            id="name" 
+                            v-model="order.name" 
+                            placeholder="Enter your name"
+                            type="text"
+                        >
+                        <span v-if="order.name && !isNameValid" class="error">Name must contain letters only</span>
+                    </p>
+                    <p>
+                        <label for="phone">Phone (numbers only):</label><br>
+                        <input 
+                            id="phone" 
+                            v-model="order.phone" 
+                            placeholder="Enter your phone number"
+                            type="text"
+                        >
+                        <span v-if="order.phone && !isPhoneValid" class="error">Phone must contain numbers only</span>
+                    </p>
 
-                <button v-on:click="showProduct = true">← Back to Classes</button>
+                    <button 
+                        v-on:click="submitForm" 
+                        :disabled="!isCheckoutValid"
+                        class="checkout-btn"
+                    >
+                        Place Enrollment
+                    </button>
+
+                    <button v-on:click="showProduct = true" class="back-btn">← Back to Classes</button>
+                </div>
             </div>
         </main>
     </div>
@@ -113,33 +132,38 @@
             el: '#app',
             data: {
                 sitename: 'After-School Activity Center',
-                // multiple class offerings
                 classes: classesData,
                 cart: [],
                 showProduct: true,
+                sortAttribute: 'title',
+                sortOrder: 'asc',
                 order: {
-                    firstName: '',
-                    lastName: '',
-                    address: '',
-                    city: '',
-                    state: '',
-                    zip: '',
-                    contact: 'Email',
-                    sendWelcome: 'Send welcome pack',
-                    noWelcome: 'Do not send welcome pack',
-                    welcomePack: 'Do not send welcome pack'
-                },
-                states: ['Alabama', 'Alaska', 'Arizona', 'California', 'Nevada']
+                    name: '',
+                    phone: ''
+                }
             },
             methods: {
                 addToCart: function (cls) {
                     this.cart.push(cls.id);
                 },
                 toggleCheckout: function () {
-                    this.showProduct = !this.showProduct;
+                    if (this.cartItemCount > 0) {
+                        this.showProduct = !this.showProduct;
+                    }
                 },
-                submitForm: function () { alert('Enrollment submitted!') },
-                // helper to count how many of a class are in the cart
+                submitForm: function () {
+                    if (this.isCheckoutValid) {
+                        alert('Order submitted!\n\nName: ' + this.order.name + '\nPhone: ' + this.order.phone + '\nTotal: $' + this.cartTotal.toFixed(2));
+                        // Reset cart and form
+                        this.cart = [];
+                        this.order.name = '';
+                        this.order.phone = '';
+                        this.showProduct = true;
+                    }
+                },
+                removeFromCart: function (index) {
+                    this.cart.splice(index, 1);
+                },
                 cartCount: function (id) {
                     let count = 0;
                     for (let i = 0; i < this.cart.length; i++) {
@@ -149,9 +173,6 @@
                     }
                     return count;
                 },
-                itemsLeftFor: function (cls) {
-                    return Math.max(0, cls.availableSeats - this.cartCount(cls.id));
-                },
                 canEnroll: function (cls) {
                     return cls.availableSeats > this.cartCount(cls.id);
                 }
@@ -160,14 +181,49 @@
                 cartItemCount: function () {
                     return this.cart.length;
                 },
-                sortedClasses() {
-                    // sort by price ascending without mutating original
-                    function compare(a, b) {
-                        if (a.price > b.price) return 1;
-                        if (a.price < b.price) return -1;
+                sortedClasses: function () {
+                    const attr = this.sortAttribute;
+                    const order = this.sortOrder;
+                    
+                    return this.classes.slice().sort(function(a, b) {
+                        let valA = a[attr];
+                        let valB = b[attr];
+                        
+                        // Handle string comparison (case-insensitive)
+                        if (typeof valA === 'string') {
+                            valA = valA.toLowerCase();
+                            valB = valB.toLowerCase();
+                        }
+                        
+                        if (valA > valB) return order === 'asc' ? 1 : -1;
+                        if (valA < valB) return order === 'asc' ? -1 : 1;
                         return 0;
-                    }
-                    return this.classes.slice().sort(compare);
+                    });
+                },
+                cartItems: function () {
+                    const self = this;
+                    return this.cart.map(function(id) {
+                        return self.classes.find(function(cls) {
+                            return cls.id === id;
+                        });
+                    });
+                },
+                cartTotal: function () {
+                    return this.cartItems.reduce(function(sum, item) {
+                        return sum + item.price;
+                    }, 0);
+                },
+                isNameValid: function () {
+                    return /^[A-Za-z\s]+$/.test(this.order.name);
+                },
+                isPhoneValid: function () {
+                    return /^[0-9]+$/.test(this.order.phone);
+                },
+                isCheckoutValid: function () {
+                    return this.order.name.length > 0 && 
+                           this.order.phone.length > 0 && 
+                           this.isNameValid && 
+                           this.isPhoneValid;
                 }
             }
         });
