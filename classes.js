@@ -120,5 +120,5 @@ var classesData = [
         availableSeats: 5,
         location: 'Downtown Dubai',
         rating: 4
-    }
+    }kljk
 ];
