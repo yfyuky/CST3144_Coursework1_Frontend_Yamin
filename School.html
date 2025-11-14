@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div id="app">
@@ -22,6 +24,21 @@
         <main>
             <!-- Lessons Page -->
             <div v-if="showProduct">
+                <!-- Search Bar -->
+                <div class="search-section">
+                    <div class="search-bar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" v-model="searchQuery"
+                            placeholder="Search lessons by subject, location, price, or spaces..." class="search-input">
+                        <button v-if="searchQuery" v-on:click="searchQuery = ''" class="clear-search">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <p v-if="searchQuery" class="search-results-count">
+                        Found {{ filteredClasses.length }} result(s) for "{{ searchQuery }}"
+                    </p>
+                </div>
+
                 <!-- Sort Controls -->
                 <div class="sort-controls">
                     <div class="sort-group">
@@ -58,7 +75,8 @@
                             <i v-for="n in (5 - cls.rating)" :key="'empty-'+n" class="fa-regular fa-star"></i>
                         </div>
                         <span v-if="cls.availableSeats === cartCount(cls.id)" class="availability full">All full!</span>
-                        <span v-else-if="cls.availableSeats - cartCount(cls.id) < 5" class="availability limited">Only {{ cls.availableSeats - cartCount(cls.id) }} seats left!</span>
+                        <span v-else-if="cls.availableSeats - cartCount(cls.id) < 5" class="availability limited">Only
+                            {{ cls.availableSeats - cartCount(cls.id) }} seats left!</span>
                         <span v-else class="availability available">Enroll now!</span>
                         <button v-on:click="addToCart(cls)" v-if="canEnroll(cls)">Add to Cart</button>
                         <button disabled v-else>Add to Cart</button>
@@ -69,7 +87,7 @@
             <!-- Checkout Page -->
             <div v-else>
                 <h2>Enrollment Checkout</h2>
-                
+
                 <!-- Shopping Cart Display -->
                 <div class="cart-section">
                     <h3>Your Cart ({{ cartItemCount }} items)</h3>
@@ -92,30 +110,16 @@
                     <h3>Enter Your Information</h3>
                     <p>
                         <label for="name">Name (letters only):</label><br>
-                        <input 
-                            id="name" 
-                            v-model="order.name" 
-                            placeholder="Enter your name"
-                            type="text"
-                        >
+                        <input id="name" v-model="order.name" placeholder="Enter your name" type="text">
                         <span v-if="order.name && !isNameValid" class="error">Name must contain letters only</span>
                     </p>
                     <p>
                         <label for="phone">Phone (numbers only):</label><br>
-                        <input 
-                            id="phone" 
-                            v-model="order.phone" 
-                            placeholder="Enter your phone number"
-                            type="text"
-                        >
+                        <input id="phone" v-model="order.phone" placeholder="Enter your phone number" type="text">
                         <span v-if="order.phone && !isPhoneValid" class="error">Phone must contain numbers only</span>
                     </p>
 
-                    <button 
-                        v-on:click="submitForm" 
-                        :disabled="!isCheckoutValid"
-                        class="checkout-btn"
-                    >
+                    <button v-on:click="submitForm" :disabled="!isCheckoutValid" class="checkout-btn">
                         Place Enrollment
                     </button>
 
@@ -184,17 +188,17 @@
                 sortedClasses: function () {
                     const attr = this.sortAttribute;
                     const order = this.sortOrder;
-                    
-                    return this.classes.slice().sort(function(a, b) {
+
+                    return this.classes.slice().sort(function (a, b) {
                         let valA = a[attr];
                         let valB = b[attr];
-                        
+
                         // Handle string comparison (case-insensitive)
                         if (typeof valA === 'string') {
                             valA = valA.toLowerCase();
                             valB = valB.toLowerCase();
                         }
-                        
+
                         if (valA > valB) return order === 'asc' ? 1 : -1;
                         if (valA < valB) return order === 'asc' ? -1 : 1;
                         return 0;
@@ -202,14 +206,14 @@
                 },
                 cartItems: function () {
                     const self = this;
-                    return this.cart.map(function(id) {
-                        return self.classes.find(function(cls) {
+                    return this.cart.map(function (id) {
+                        return self.classes.find(function (cls) {
                             return cls.id === id;
                         });
                     });
                 },
                 cartTotal: function () {
-                    return this.cartItems.reduce(function(sum, item) {
+                    return this.cartItems.reduce(function (sum, item) {
                         return sum + item.price;
                     }, 0);
                 },
@@ -220,13 +224,14 @@
                     return /^[0-9]+$/.test(this.order.phone);
                 },
                 isCheckoutValid: function () {
-                    return this.order.name.length > 0 && 
-                           this.order.phone.length > 0 && 
-                           this.isNameValid && 
-                           this.isPhoneValid;
+                    return this.order.name.length > 0 &&
+                        this.order.phone.length > 0 &&
+                        this.isNameValid &&
+                        this.isPhoneValid;
                 }
             }
         });
     </script>
 </body>
+
 </html>
