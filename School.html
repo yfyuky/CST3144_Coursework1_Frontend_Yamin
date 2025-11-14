@@ -59,9 +59,17 @@
                     </div>
                 </div>
 
+                <!-- No Results Message -->
+                <div v-if="filteredClasses.length === 0" class="no-results">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <h3>No lessons found</h3>
+                    <p>Try adjusting your search terms</p>
+                    <button v-on:click="searchQuery = ''" class="reset-search-btn">Clear Search</button>
+                </div>
+
                 <!-- Lessons Grid -->
-                <div class="classes">
-                    <article class="class" v-for="cls in sortedClasses" :key="cls.id">
+                <div v-else class="classes">
+                    <article class="class" v-for="cls in filteredClasses" :key="cls.id">
                         <figure>
                             <img :src="cls.image" :alt="cls.title">
                         </figure>
@@ -141,6 +149,7 @@
                 showProduct: true,
                 sortAttribute: 'title',
                 sortOrder: 'asc',
+                searchQuery: '',
                 order: {
                     name: '',
                     phone: ''
@@ -202,6 +211,26 @@
                         if (valA > valB) return order === 'asc' ? 1 : -1;
                         if (valA < valB) return order === 'asc' ? -1 : 1;
                         return 0;
+                    });
+                },
+                filteredClasses: function () {
+                    const query = this.searchQuery.toLowerCase().trim();
+
+                    if (!query) {
+                        return this.sortedClasses;
+                    }
+
+                    // Search across multiple fields
+                    return this.sortedClasses.filter(function (cls) {
+                        const searchableText = [
+                            cls.title,
+                            cls.location,
+                            cls.price.toString(),
+                            cls.availableSeats.toString(),
+                            cls.description
+                        ].join(' ').toLowerCase();
+
+                        return searchableText.includes(query);
                     });
                 },
                 cartItems: function () {
