@@ -1,5 +1,4 @@
 // Externalized classes data for School.html
-// Now with 10+ lessons, each with 5 available spaces
 var classesData = [
     {
         id: 2001,
