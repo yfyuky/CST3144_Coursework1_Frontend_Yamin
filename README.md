@@ -1,6 +1,6 @@
 # CST3144_Coursework1_Frontend_Yamin# My Frontend for CST3144 Coursework
 
-**Name:** Your Name  
+**Name:** Yamin Rizwan
 **ID:** M00913254  
 **Module:** CST3144 Full Stack Development
 
